@@ -21,7 +21,7 @@ from utils.torch_utils import select_device, load_classifier, time_synchronized
 
 
 def detect(opt):
-    result = {}
+    result = []
     resultNames = []
     save_img=False
     out, source, view_img, save_txt, imgsz = \
@@ -32,8 +32,10 @@ def detect(opt):
     set_logging()
     device = select_device(opt['device'])
     if os.path.exists(out):
-        shutil.rmtree(out)  # delete output folder
-    os.makedirs(out)  # make new output folder
+        print()
+        # shutil.rmtree(out)  # delete output folder
+    else:
+        os.makedirs(out)  # make new output folder
     half = device.type != 'cpu'  # half precision only supported on CUDA
 
     # Load model
@@ -118,7 +120,17 @@ def detect(opt):
                     crop_img = im0[y1:y2, x1:x2]
                     crop_path = save_path.replace('.jpg', "_{}.jpg".format(resultNames[nameIdx]))
                     cv2.imwrite(crop_path, crop_img)
-                    result[resultNames[nameIdx]] = os.path.abspath(crop_path)
+                    result.append({
+                        'label': resultNames[nameIdx],
+                        'path': os.path.abspath(crop_path),
+                        'position': {
+                            'x1': x1,
+                            'x2': x2,
+                            'y1': y1,
+                            'y2': y2
+                        }
+                    })
+                    # result[resultNames[nameIdx]] = os.path.abspath(crop_path)
                     nameIdx += 1
 
                     # if save_txt:  # Write to file
