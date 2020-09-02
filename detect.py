@@ -21,6 +21,7 @@ from utils.torch_utils import select_device, load_classifier, time_synchronized
 
 
 def detect(opt):
+    result = {}
     resultNames = []
     save_img=False
     out, source, view_img, save_txt, imgsz = \
@@ -105,16 +106,29 @@ def detect(opt):
                     n = (det[:, -1] == c).sum()  # detections per class
                     s += '%g %ss, ' % (n, names[int(c)])  # add to string
                     resultNames.append(names[int(c)])
-                # Write results
+                    # Write results
+                height, width = im0.shape[:2]
+                nameIdx = 0
                 for *xyxy, conf, cls in reversed(det):
-                    if save_txt:  # Write to file
-                        xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
-                        with open(txt_path + '.txt', 'a') as f:
-                            f.write(('%g ' * 5 + '\n') % (cls, *xywh))  # label format
+                    x1 = int(xyxy[0]) - round(width / 100)
+                    x2 = int(xyxy[2]) + round(width / 100)
+                    y1 = int(xyxy[1]) - round(height / 140)
+                    y2 = int(xyxy[3]) + round(height / 140)
 
-                    if save_img or view_img:  # Add bbox to image
-                        label = '%s %.2f' % (names[int(cls)], conf)
-                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                    crop_img = im0[y1:y2, x1:x2]
+                    crop_path = save_path.replace('.jpg', "_{}.jpg".format(resultNames[nameIdx]))
+                    cv2.imwrite(crop_path, crop_img)
+                    result[resultNames[nameIdx]] = os.path.abspath(crop_path)
+                    nameIdx += 1
+
+                    # if save_txt:  # Write to file
+                    #     xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                    #     with open(txt_path + '.txt', 'a') as f:
+                    #         f.write(('%s ' + '%g ' * 4 + '\n') % (names[int(cls)], *xywh))  # label format
+
+                    # if save_img or view_img:  # Add bbox to image
+                        # label = '%s %.2f' % (names[int(cls)], conf)
+                        # plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
             # Print time (inference + NMS)
             print('%sDone. (%.3fs)' % (s, t2 - t1))
 
@@ -125,10 +139,10 @@ def detect(opt):
                     raise StopIteration
 
             # Save results (image with detections)
-            print(save_path)
             if save_img:
                 if dataset.mode == 'images':
-                    cv2.imwrite(save_path, im0)
+                    print()
+                    # cv2.imwrite(save_path, im0)
                 else:
                     if vid_path != save_path:  # new video
                         vid_path = save_path
@@ -148,7 +162,7 @@ def detect(opt):
             os.system('open ' + save_path)
 
     print('Done. (%.3fs)' % (time.time() - t0))
-    return save_path, resultNames
+    return result
 
 
 # if __name__ == '__main__':
@@ -168,7 +182,7 @@ def detect(opt):
 # parser.add_argument('--update', action='store_true', help='update all models')
 # opt = parser.parse_args()
 # print(opt)
-def run(model, source, view_img=False, save_txt=False, classes=None, agnostic_nms=False, augment=False, update=False):
+def run(model, source, view_img=False, save_txt=True, classes=None, agnostic_nms=False, augment=False, update=False):
     arg = {
         # "weights" = 'yolov5s.pt'
         "model" : model
