@@ -3,6 +3,7 @@ import os
 import platform
 import shutil
 import time
+import re
 from pathlib import Path
 
 import cv2
@@ -108,7 +109,8 @@ def detect(opt):
                     n = (det[:, -1] == c).sum()  # detections per class
                     s += '%g %ss, ' % (n, names[int(c)])  # add to string
                     resultNames.append(names[int(c)])
-                    # Write results
+
+                # Write results
                 height, width = im0.shape[:2]
                 nameIdx = 0
                 for *xyxy, conf, cls in reversed(det):
@@ -117,11 +119,18 @@ def detect(opt):
                     y1 = int(xyxy[1]) - round(height / 140)
                     y2 = int(xyxy[3]) + round(height / 140)
 
+                    if len(resultNames) == 1 and nameIdx >= len(resultNames):
+                        labelName = resultNames[0]
+                    elif nameIdx >= len(resultNames):
+                        labelName = "Unknown"
+                    else:
+                        labelName = resultNames[nameIdx]
+
                     crop_img = im0[y1:y2, x1:x2]
-                    crop_path = save_path.replace('.jpg', "_{}.jpg".format(resultNames[nameIdx]))
+                    crop_path = re.sub('\.(jpg|JPG|jpeg|JPEG|png|PNG)', "_{}{}.jpg".format(labelName, nameIdx), save_path)
                     cv2.imwrite(crop_path, crop_img)
                     result.append({
-                        'label': resultNames[nameIdx],
+                        'label': labelName,
                         'path': os.path.abspath(crop_path),
                         'position': {
                             'x1': x1,
@@ -169,7 +178,7 @@ def detect(opt):
                     vid_writer.write(im0)
 
     if save_txt or save_img:
-        print('Results saved to %s' % Path(out))
+        # print('Results saved to %s' % Path(out))
         if platform.system() == 'Darwin' and not opt['update']:  # MacOS
             os.system('open ' + save_path)
 
