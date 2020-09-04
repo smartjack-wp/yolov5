@@ -23,7 +23,7 @@ from utils.torch_utils import select_device, load_classifier, time_synchronized
 
 def detect(opt):
     result = []
-    resultNames = []
+    resultNames = {}
     save_img=False
     out, source, view_img, save_txt, imgsz = \
         opt['output'], opt['source'], opt['view-img'], opt['save-txt'], opt['img-size']
@@ -105,15 +105,21 @@ def detect(opt):
                 det =  torch.tensor(det)
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
+                print(names)
                 for c in det[:, -1].unique():
                     n = (det[:, -1] == c).sum()  # detections per class
                     s += '%g %ss, ' % (n, names[int(c)])  # add to string
-                    resultNames.insert(0, names[int(c)])
+                    # resultNames.insert(0, names[int(c)])
+                    resultNames[int(c)] = names[int(c)]
 
                 # Write results
                 height, width = im0.shape[:2]
                 nameIdx = 0
                 for *xyxy, conf, cls in reversed(det):
+                    print("{}---------------------start".format(nameIdx))
+                    print("conf : {}".format(conf))
+                    print("cls : {}".format(cls))
+                    print("{}---------------------end".format(nameIdx))
                     x1 = int(xyxy[0]) - round(width / 100)
                     x2 = int(xyxy[2]) + round(width / 100)
                     y1 = int(xyxy[1]) - round(height / 140)
@@ -124,7 +130,7 @@ def detect(opt):
                     elif nameIdx >= len(resultNames):
                         labelName = "Unknown"
                     else:
-                        labelName = resultNames[nameIdx]
+                        labelName = resultNames[int(cls)]
 
                     crop_img = im0[y1:y2, x1:x2]
                     crop_path = re.sub('\.(jpg|JPG|jpeg|JPEG|png|PNG)', "_{}{}.jpg".format(labelName, nameIdx), save_path)
