@@ -108,7 +108,7 @@ def detect(opt):
                 for c in det[:, -1].unique():
                     n = (det[:, -1] == c).sum()  # detections per class
                     s += '%g %ss, ' % (n, names[int(c)])  # add to string
-                    resultNames.append(names[int(c)])
+                    resultNames.insert(0, names[int(c)])
 
                 # Write results
                 height, width = im0.shape[:2]
