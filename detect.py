@@ -105,7 +105,6 @@ def detect(opt):
                 det =  torch.tensor(det)
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
-                print(names)
                 for c in det[:, -1].unique():
                     n = (det[:, -1] == c).sum()  # detections per class
                     s += '%g %ss, ' % (n, names[int(c)])  # add to string
@@ -116,10 +115,6 @@ def detect(opt):
                 height, width = im0.shape[:2]
                 nameIdx = 0
                 for *xyxy, conf, cls in reversed(det):
-                    print("{}---------------------start".format(nameIdx))
-                    print("conf : {}".format(conf))
-                    print("cls : {}".format(cls))
-                    print("{}---------------------end".format(nameIdx))
                     x1 = int(xyxy[0]) - round(width / 100)
                     x2 = int(xyxy[2]) + round(width / 100)
                     y1 = int(xyxy[1]) - round(height / 140)
