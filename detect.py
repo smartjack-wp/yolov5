@@ -128,8 +128,8 @@ def detect(opt):
                     x2 = int(xyxy[2]) + round(width / 100)
 
                     if maker == 'tci':
-                        y1 = int(xyxy[1]) - round(height / 120)
-                        y2 = int(xyxy[3]) + round(height / 120)
+                        y1 = int(xyxy[1]) - round(height / 100)
+                        y2 = int(xyxy[3]) + round(height / 100)
                     else:
                         y1 = int(xyxy[1]) - round(height / 140)
                         y2 = int(xyxy[3]) + round(height / 140)
@@ -146,7 +146,8 @@ def detect(opt):
 
                     if maker == 'tci':
                         crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
-                        crop_img = cv2.adaptiveThreshold(crop_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 45, 10)
+                        crop_img = cv2.adaptiveThreshold(crop_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 45, 20)
+                        crop_img = cv2.copyMakeBorder(crop_img, 50, 50, 50, 50, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                     
                     cv2.imwrite(crop_path, crop_img)
                     result.append({
