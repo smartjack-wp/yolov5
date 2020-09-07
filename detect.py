@@ -64,9 +64,11 @@ def detect(opt):
     else:
         save_img = True
 
-        grey = cv2.imread(source, cv2.IMREAD_GRAYSCALE)
-        source = 'scaled/' + source.split('/')[-1]
-        cv2.imwrite(source, grey)
+        # if maker == 'tci':
+            # gray = cv2.imread(source, cv2.IMREAD_GRAYSCALE)
+            # gray = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 105, 2)
+            # source = 'scaled/' + source.split('/')[-1]
+            # cv2.imwrite(source, gray)
 
         dataset = LoadImages(source, img_size=imgsz)
 
@@ -131,7 +133,7 @@ def detect(opt):
                     else:
                         y1 = int(xyxy[1]) - round(height / 140)
                         y2 = int(xyxy[3]) + round(height / 140)
-                        
+
                     if len(resultNames) == 1 and nameIdx >= len(resultNames):
                         labelName = resultNames[0]
                     elif nameIdx >= len(resultNames):
@@ -140,7 +142,12 @@ def detect(opt):
                         labelName = resultNames[int(cls)]
 
                     crop_img = im0[y1:y2, x1:x2]
-                    crop_path = re.sub('\.(jpg|JPG|jpeg|JPEG|png|PNG)', " {}.jpg".format(labelName), save_path)
+                    crop_path = re.sub('\.(jpg|JPG|jpeg|JPEG|png|PNG)', "_{}.jpg".format(labelName), save_path)
+
+                    if maker == 'tci':
+                        crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+                        crop_img = cv2.adaptiveThreshold(crop_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 45, 10)
+                    
                     cv2.imwrite(crop_path, crop_img)
                     result.append({
                         'label': labelName,
