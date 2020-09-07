@@ -27,6 +27,8 @@ def detect(opt):
     save_img=False
     out, source, view_img, save_txt, imgsz = \
         opt['output'], opt['source'], opt['view-img'], opt['save-txt'], opt['img-size']
+    print(opt)
+    maker = opt['maker']
     webcam = source.isnumeric() or source.startswith('rtsp') or source.startswith('http') or source.endswith('.txt')
 
     # Initialize
@@ -61,6 +63,11 @@ def detect(opt):
         dataset = LoadStreams(source, img_size=imgsz)
     else:
         save_img = True
+
+        grey = cv2.imread(source, cv2.IMREAD_GRAYSCALE)
+        source = 'scaled/' + source.split('/')[-1]
+        cv2.imwrite(source, grey)
+
         dataset = LoadImages(source, img_size=imgsz)
 
     # Get names and colors
@@ -117,9 +124,14 @@ def detect(opt):
                 for *xyxy, conf, cls in reversed(det):
                     x1 = int(xyxy[0]) - round(width / 100)
                     x2 = int(xyxy[2]) + round(width / 100)
-                    y1 = int(xyxy[1]) - round(height / 140)
-                    y2 = int(xyxy[3]) + round(height / 140)
 
+                    if maker == 'tci':
+                        y1 = int(xyxy[1]) - round(height / 120)
+                        y2 = int(xyxy[3]) + round(height / 120)
+                    else:
+                        y1 = int(xyxy[1]) - round(height / 140)
+                        y2 = int(xyxy[3]) + round(height / 140)
+                        
                     if len(resultNames) == 1 and nameIdx >= len(resultNames):
                         labelName = resultNames[0]
                     elif nameIdx >= len(resultNames):
@@ -128,7 +140,7 @@ def detect(opt):
                         labelName = resultNames[int(cls)]
 
                     crop_img = im0[y1:y2, x1:x2]
-                    crop_path = re.sub('\.(jpg|JPG|jpeg|JPEG|png|PNG)', "_{}{}.jpg".format(labelName, nameIdx), save_path)
+                    crop_path = re.sub('\.(jpg|JPG|jpeg|JPEG|png|PNG)', " {}.jpg".format(labelName), save_path)
                     cv2.imwrite(crop_path, crop_img)
                     result.append({
                         'label': labelName,
@@ -204,7 +216,7 @@ def detect(opt):
 # parser.add_argument('--update', action='store_true', help='update all models')
 # opt = parser.parse_args()
 # print(opt)
-def run(model, source, view_img=False, save_txt=True, classes=None, agnostic_nms=False, augment=False, update=False):
+def run(model, source, maker='', view_img=False, save_txt=True, classes=None, agnostic_nms=False, augment=False, update=False):
     arg = {
         # "weights" = 'yolov5s.pt'
         "model" : model
@@ -214,6 +226,7 @@ def run(model, source, view_img=False, save_txt=True, classes=None, agnostic_nms
         , "conf-thres" : 0.4
         , "iou-thres" : 0.5
         , "device" : '0'
+        , 'maker' : maker
         , "view-img" : view_img
         , "save-txt" : save_txt
         , "classes" : classes
