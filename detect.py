@@ -20,15 +20,14 @@ from utils.general import (
     xyxy2xywh, plot_one_box, strip_optimizer, set_logging)
 from utils.torch_utils import select_device, load_classifier, time_synchronized
 
-
 def detect(opt):
     result = []
     resultNames = {}
     save_img=False
     out, source, view_img, save_txt, imgsz = \
         opt['output'], opt['source'], opt['view-img'], opt['save-txt'], opt['img-size']
-    print(opt)
     maker = opt['maker']
+    isOcr = opt['isOcr']
     webcam = source.isnumeric() or source.startswith('rtsp') or source.startswith('http') or source.endswith('.txt')
 
     # Initialize
@@ -139,11 +138,10 @@ def detect(opt):
                     crop_img = im0[y1:y2, x1:x2]
                     crop_path = re.sub('\.(jpg|JPG|jpeg|JPEG|png|PNG)', "_{}.jpg".format(labelName), save_path)
 
-                    if maker == 'tci':
+                    if isOcr:
                         crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
                         crop_img = cv2.adaptiveThreshold(crop_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 45, 20)
-                        
-                    crop_img = cv2.copyMakeBorder(crop_img, 50, 50, 50, 50, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+                        crop_img = cv2.copyMakeBorder(crop_img, 50, 50, 50, 50, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                     cv2.imwrite(crop_path, crop_img)
                     result.append({
                         'label': labelName,
@@ -219,7 +217,7 @@ def detect(opt):
 # parser.add_argument('--update', action='store_true', help='update all models')
 # opt = parser.parse_args()
 # print(opt)
-def run(model, source, maker='', view_img=False, save_txt=True, classes=None, agnostic_nms=False, augment=False, update=False):
+def run(model, source, maker='', isOcr=False, view_img=False, save_txt=True, classes=None, agnostic_nms=False, augment=False, update=False):
     arg = {
         # "weights" = 'yolov5s.pt'
         "model" : model
@@ -236,6 +234,7 @@ def run(model, source, maker='', view_img=False, save_txt=True, classes=None, ag
         , "agnostic-nms" : agnostic_nms
         , "augment" : augment
         , "update" : update
+        , "isOcr" : isOcr
     }
     
     return detect(arg)
