@@ -125,8 +125,14 @@ def detect(opt):
                 for *xyxy, conf, cls in reversed(det):
                     x1 = int(xyxy[0]) - round(width / 100)
                     x2 = int(xyxy[2]) + round(width / 100)
-                    y1 = int(xyxy[1]) - round(height / 140)
-                    y2 = int(xyxy[3]) + round(height / 140)
+
+                    if maker == 'tci':
+                        y1 = int(xyxy[1]) - round(height / 110)
+                        y2 = int(xyxy[3]) + round(height / 110)
+                    else:
+                        y1 = int(xyxy[1]) - round(height / 140)
+                        y2 = int(xyxy[3]) + round(height / 140)
+                        
 
                     if len(resultNames) == 1 and nameIdx >= len(resultNames):
                         labelName = resultNames[0]
