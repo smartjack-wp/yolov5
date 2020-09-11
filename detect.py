@@ -138,7 +138,7 @@ def detect(opt):
                     crop_img = im0[y1:y2, x1:x2]
                     crop_path = re.sub('\.(jpg|JPG|jpeg|JPEG|png|PNG)', "_{}.jpg".format(labelName), save_path)
 
-                    if isOcr:
+                    if isOcr and maker == 'tci':
                         crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
                         crop_img = cv2.adaptiveThreshold(crop_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 45, 20)
                         crop_img = cv2.copyMakeBorder(crop_img, 50, 50, 50, 50, cv2.BORDER_CONSTANT, value=[255, 255, 255])
@@ -217,27 +217,27 @@ def detect(opt):
 # parser.add_argument('--update', action='store_true', help='update all models')
 # opt = parser.parse_args()
 # print(opt)
-def run(model, source, maker='', isOcr=False, view_img=False, save_txt=True, classes=None, agnostic_nms=False, augment=False, update=False):
+def run(source, model, maker='', isOcr=False):
     arg = {
-        # "weights" = 'yolov5s.pt'
-        "model" : model
-        , "source" : source
+        "source" : source
+        , "model" : model
+        , 'maker' : maker
+        , "isOcr" : isOcr
+        , "device" : '0'
         , "output" : 'output'
         , "img-size" : 640
         , "conf-thres" : 0.4
         , "iou-thres" : 0.5
-        , "device" : '0'
-        , 'maker' : maker
-        , "view-img" : view_img
-        , "save-txt" : save_txt
-        , "classes" : classes
-        , "agnostic-nms" : agnostic_nms
-        , "augment" : augment
-        , "update" : update
-        , "isOcr" : isOcr
+        , "view-img" : False
+        , "save-txt" : True
+        , "classes" : None
+        , "agnostic-nms" : False
+        , "augment" : False
+        , "update" : False
     }
     
-    return detect(arg)
+    result = detect(arg)
+    return result
 
 # with torch.no_grad():
 #     if opt.update:  # update all models (to fix SourceChangeWarning)
