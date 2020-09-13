@@ -106,7 +106,7 @@ def detect(opt):
                 p, s, im0 = path, '', im0s
 
             save_path = str(Path(out) / Path(p).name)
-            txt_path = str(Path(out) / Path(p).stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
+            # txt_path = str(Path(out) / Path(p).stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
             s += '%gx%g ' % img.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if det is not None and len(det):
@@ -123,44 +123,49 @@ def detect(opt):
                 height, width = im0.shape[:2]
                 nameIdx = 0
                 for *xyxy, conf, cls in reversed(det):
-                    x1 = int(xyxy[0]) - round(width / 100)
-                    x2 = int(xyxy[2]) + round(width / 100)
-
-                    if maker == 'tci':
-                        y1 = int(xyxy[1]) - round(height / 110)
-                        y2 = int(xyxy[3]) + round(height / 110)
-                    else:
-                        y1 = int(xyxy[1]) - round(height / 140)
-                        y2 = int(xyxy[3]) + round(height / 140)
-                        
-
                     if len(resultNames) == 1 and nameIdx >= len(resultNames):
                         labelName = resultNames[0]
                     elif nameIdx >= len(resultNames):
                         labelName = "Unknown"
                     else:
                         labelName = resultNames[int(cls)]
+                    nameIdx += 1
 
+                    x1 = int(xyxy[0]) - round(width / 100)
+                    x2 = int(xyxy[2]) + round(width / 100)
+
+                    if isOcr:
+                        y1 = int(xyxy[1]) - round(height / 110)
+                        y2 = int(xyxy[3]) + round(height / 110)
+                    else:
+                        y1 = int(xyxy[1]) - round(height / 140)
+                        y2 = int(xyxy[3]) + round(height / 140)
+                        
                     crop_img = im0[y1:y2, x1:x2]
                     crop_path = re.sub('\.(jpg|JPG|jpeg|JPEG|png|PNG)', "_{}.jpg".format(labelName), save_path)
 
-                    if isOcr and maker == 'tci':
+                    if isOcr:
                         crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
                         crop_img = cv2.adaptiveThreshold(crop_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 45, 20)
                         crop_img = cv2.copyMakeBorder(crop_img, 50, 50, 50, 50, cv2.BORDER_CONSTANT, value=[255, 255, 255])
-                    cv2.imwrite(crop_path, crop_img)
-                    result.append({
-                        'label': labelName,
-                        'path': os.path.abspath(crop_path),
-                        'position': {
-                            'x1': x1,
-                            'x2': x2,
-                            'y1': y1,
-                            'y2': y2
-                        }
-                    })
+
+                    try:
+                        cv2.imwrite(crop_path, crop_img)
+                        result.append({
+                            'label': labelName,
+                            'path': os.path.abspath(crop_path),
+                            'position': {
+                                'x1': x1,
+                                'x2': x2,
+                                'y1': y1,
+                                'y2': y2
+                            }
+                        })
+                    except cv2.error as e:
+                        print(e)
+                        print('-----------crop image save error-----------')
+                        pass
                     # result[resultNames[nameIdx]] = os.path.abspath(crop_path)
-                    nameIdx += 1
 
                     # if save_txt:  # Write to file
                     #     xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
@@ -174,33 +179,33 @@ def detect(opt):
             print('%sDone. (%.3fs)' % (s, t2 - t1))
 
             # Stream results
-            if view_img:
-                cv2.imshow(p, im0)
-                if cv2.waitKey(1) == ord('q'):  # q to quit
-                    raise StopIteration
+            # if view_img:
+            #     cv2.imshow(p, im0)
+            #     if cv2.waitKey(1) == ord('q'):  # q to quit
+            #         raise StopIteration
 
             # Save results (image with detections)
-            if save_img:
-                if dataset.mode == 'images':
-                    print()
-                    # cv2.imwrite(save_path, im0)
-                else:
-                    if vid_path != save_path:  # new video
-                        vid_path = save_path
-                        if isinstance(vid_writer, cv2.VideoWriter):
-                            vid_writer.release()  # release previous video writer
+            # if save_img:
+            #     if dataset.mode == 'images':
+            #         print()
+            #         # cv2.imwrite(save_path, im0)
+            #     else:
+            #         if vid_path != save_path:  # new video
+            #             vid_path = save_path
+            #             if isinstance(vid_writer, cv2.VideoWriter):
+            #                 vid_writer.release()  # release previous video writer
 
-                        fourcc = 'mp4v'  # output video codec
-                        fps = vid_cap.get(cv2.CAP_PROP_FPS)
-                        w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                        h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                        vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*fourcc), fps, (w, h))
-                    vid_writer.write(im0)
+            #             fourcc = 'mp4v'  # output video codec
+            #             fps = vid_cap.get(cv2.CAP_PROP_FPS)
+            #             w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            #             h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            #             vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*fourcc), fps, (w, h))
+            #         vid_writer.write(im0)
 
-    if save_txt or save_img:
-        # print('Results saved to %s' % Path(out))
-        if platform.system() == 'Darwin' and not opt['update']:  # MacOS
-            os.system('open ' + save_path)
+    # if save_txt or save_img:
+    #     # print('Results saved to %s' % Path(out))
+    #     if platform.system() == 'Darwin' and not opt['update']:  # MacOS
+    #         os.system('open ' + save_path)
 
     print('Done. (%.3fs)' % (time.time() - t0))
     return result
@@ -235,7 +240,7 @@ def run(source, model, maker='', isOcr=False):
         , "conf-thres" : 0.4
         , "iou-thres" : 0.5
         , "view-img" : False
-        , "save-txt" : True
+        , "save-txt" : False
         , "classes" : None
         , "agnostic-nms" : False
         , "augment" : False
