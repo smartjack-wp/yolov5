@@ -126,10 +126,11 @@ def detect(opt):
                     if len(resultNames) == 1 and nameIdx >= len(resultNames):
                         labelName = resultNames[0]
                     elif nameIdx >= len(resultNames):
-                        labelName = "Unknown"
+                        labelName = "Unknown{}".format(nameIdx)
                     else:
                         labelName = resultNames[int(cls)]
                     nameIdx += 1
+
 
                     x1 = int(xyxy[0]) - round(width / 100)
                     x2 = int(xyxy[2]) + round(width / 100)
