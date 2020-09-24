@@ -124,7 +124,7 @@ def detect(opt):
                 nameIdx = 0
                 
                 for *xyxy, conf, cls in reversed(det):
-                    labelName = "{}_{}".format(resultNames[int(cls)], nameIdx)
+                    labelName = resultNames[int(cls)]
                     nameIdx += 1
 
                     x1 = int(xyxy[0]) - round(width / 100)
@@ -138,7 +138,7 @@ def detect(opt):
                         y2 = int(xyxy[3]) + round(height / 140)
                         
                     crop_img = im0[y1:y2, x1:x2]
-                    crop_path = re.sub('\.(jpg|JPG|jpeg|JPEG|png|PNG)', "_{}.jpg".format(labelName), save_path)
+                    crop_path = re.sub('\.(jpg|JPG|jpeg|JPEG|png|PNG)', "_{}_{}.jpg".format(labelName, nameIdx), save_path)
 
                     if isOcr:
                         crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
