@@ -224,14 +224,14 @@ def detect(opt):
 # parser.add_argument('--update', action='store_true', help='update all models')
 # opt = parser.parse_args()
 # print(opt)
-def run(source, model, maker='', isOcr=False):
+def run(source, model, maker='', isOcr=False, mode='DEV'):
     arg = {
         "source" : source
         , "model" : model
         , 'maker' : maker
         , "isOcr" : isOcr
         , "device" : '0'
-        , "output" : 'output'
+        , "output" : '/data/cmlr-output' if mode == 'PROD' else 'output'
         , "img-size" : 640
         , "conf-thres" : 0.4
         , "iou-thres" : 0.5
