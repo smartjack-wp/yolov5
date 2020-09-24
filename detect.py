@@ -122,15 +122,10 @@ def detect(opt):
                 # Write results
                 height, width = im0.shape[:2]
                 nameIdx = 0
+                
                 for *xyxy, conf, cls in reversed(det):
-                    if len(resultNames) == 1 and nameIdx >= len(resultNames):
-                        labelName = resultNames[0]
-                    elif nameIdx >= len(resultNames):
-                        labelName = "Unknown{}".format(nameIdx)
-                    else:
-                        labelName = resultNames[int(cls)]
+                    labelName = "{}_{}".format(resultNames[int(cls)], nameIdx)
                     nameIdx += 1
-
 
                     x1 = int(xyxy[0]) - round(width / 100)
                     x2 = int(xyxy[2]) + round(width / 100)
