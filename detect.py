@@ -26,6 +26,7 @@ def detect(opt):
     save_img=False
     out, source, view_img, save_txt, imgsz = \
         opt['output'], opt['source'], opt['view-img'], opt['save-txt'], opt['img-size']
+    mode = opt['mode']
     maker = opt['maker']
     isOcr = opt['isOcr']
     webcam = source.isnumeric() or source.startswith('rtsp') or source.startswith('http') or source.endswith('.txt')
@@ -105,6 +106,14 @@ def detect(opt):
             else:
                 p, s, im0 = path, '', im0s
 
+            if mode != 'PROD':
+                fileName = str(Path(p).name).split('.')[0]
+                out = f'{out}/{fileName}/'
+                if os.path.exists(out):
+                    print()
+                    # shutil.rmtree(out)  # delete output folder
+                else:
+                    os.makedirs(out)  # make new output folder
             save_path = str(Path(out) / Path(p).name)
             # txt_path = str(Path(out) / Path(p).stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
             s += '%gx%g ' % img.shape[2:]  # print string
@@ -224,14 +233,21 @@ def detect(opt):
 # parser.add_argument('--update', action='store_true', help='update all models')
 # opt = parser.parse_args()
 # print(opt)
-def run(source, model, maker='', isOcr=False, mode='DEV'):
+def run(source, model, maker='', isOcr=False, mode='DEV', version=False):
+    if version:
+        if version == 'before' or version == 'after':
+            version = f'/{version}'
+        else:
+            version = ''
+    else:
+        version = ''
     arg = {
         "source" : source
         , "model" : model
         , 'maker' : maker
         , "isOcr" : isOcr
         , "device" : '0'
-        , "output" : '/data/cmlr-output' if mode == 'PROD' else 'output'
+        , "output" : '/data/cmlr-output' if mode == 'PROD' else f'output{version}'
         , "img-size" : 640
         , "conf-thres" : 0.4
         , "iou-thres" : 0.5
@@ -241,6 +257,7 @@ def run(source, model, maker='', isOcr=False, mode='DEV'):
         , "agnostic-nms" : False
         , "augment" : False
         , "update" : False
+        , "mode" : mode
     }
     
     result = detect(arg)
